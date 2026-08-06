@@ -91,9 +91,7 @@ export function AdminPage() {
         <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div>
             <p className="font-display text-2xl font-bold">Admin Panel</p>
-            <p className="text-xs text-muted">
-              Saved in this browser · use Backup below to keep a copy on your PC
-            </p>
+            <CloudStatusLine />
           </div>
           <div className="flex flex-wrap gap-2">
             <Link to="/" className={btnGhost}>
@@ -135,8 +133,40 @@ export function AdminPage() {
   )
 }
 
+function CloudStatusLine() {
+  const { cloudStatus, cloudError, syncToCloud } = useContent()
+
+  if (cloudStatus === 'off') {
+    return (
+      <p className="text-xs text-muted">
+        Cloud off · add Supabase keys in <code>.env</code> for multi-device sync
+      </p>
+    )
+  }
+
+  const label =
+    cloudStatus === 'synced'
+      ? 'Cloud synced — all devices share the same data'
+      : cloudStatus === 'syncing'
+        ? 'Syncing to cloud…'
+        : cloudStatus === 'loading'
+          ? 'Loading from cloud…'
+          : `Cloud error: ${cloudError ?? 'unknown'}`
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <p className={`text-xs ${cloudStatus === 'error' ? 'text-rose' : 'text-muted'}`}>{label}</p>
+      {(cloudStatus === 'error' || cloudStatus === 'synced') && (
+        <button type="button" className="text-xs text-rose underline" onClick={() => void syncToCloud()}>
+          Sync now
+        </button>
+      )}
+    </div>
+  )
+}
+
 function ResetSection() {
-  const { content, resetAll, replaceAll } = useContent()
+  const { content, resetAll, replaceAll, cloudStatus, syncToCloud } = useContent()
   const [msg, setMsg] = useState('')
 
   const onImport = async (file?: File | null) => {
@@ -153,16 +183,41 @@ function ResetSection() {
   return (
     <div className="mt-10 grid gap-4">
       <div className="rounded-2xl border border-line bg-white p-4">
-        <p className="mb-1 text-sm font-medium">Backup & restore</p>
+        <p className="mb-1 text-sm font-medium">Cloud sync</p>
+        {cloudStatus === 'off' ? (
+          <p className="mb-3 text-sm text-muted">
+            JSON import লাগবে না যদি cloud চালু করো। Free Supabase প্রজেক্ট বানিয়ে{' '}
+            <code className="text-rose">.env</code> এ URL + anon key দাও — তারপর phone/PC সব জায়গায়
+            একই trips, photos, notes দেখাবে। Setup: <code>supabase/setup.sql</code> + README.
+          </p>
+        ) : (
+          <p className="mb-3 text-sm text-muted">
+            Admin থেকে যা সেভ করো সেটা cloud-এ যায়। অন্য ডিভাইসে সাইট খুললেই একই ডাটা আসবে —
+            JSON import লাগে না।
+          </p>
+        )}
+        {cloudStatus !== 'off' && (
+          <button
+            type="button"
+            className={btnPrimary}
+            onClick={() => {
+              void syncToCloud().then(() => setMsg('Cloud sync done ✓'))
+            }}
+          >
+            Sync to cloud now
+          </button>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-line bg-white p-4">
+        <p className="mb-1 text-sm font-medium">Optional local backup</p>
         <p className="mb-3 text-sm text-muted">
-          Your trips, photos, songs, dreams & notes are saved in this browser (IndexedDB).
-          Download a backup file to your computer so nothing is lost if you clear browser data
-          or switch devices.
+          Extra safety copy for your PC (optional when cloud is on).
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            className={btnPrimary}
+            className={btnGhost}
             onClick={() => {
               downloadBackup(content)
               setMsg('Backup downloaded ✓')

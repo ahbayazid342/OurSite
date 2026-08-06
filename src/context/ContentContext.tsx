@@ -1,12 +1,15 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
 import { defaultEditable } from '../data/content'
+import { cloudEnabled, loadCloudContent, saveCloudContent } from '../lib/cloud'
 import { clearStoredContent, loadContent, saveContent } from '../lib/storage'
 import type {
   Dream,
@@ -18,9 +21,14 @@ import type {
 } from '../types/content'
 import { uid } from '../types/content'
 
+export type CloudStatus = 'off' | 'loading' | 'synced' | 'syncing' | 'error'
+
 type ContentContextValue = {
   content: EditableContent
   ready: boolean
+  cloudStatus: CloudStatus
+  cloudError: string | null
+  syncToCloud: () => Promise<void>
   addPhoto: (photo: Omit<Photo, 'id'>) => void
   updatePhoto: (id: string, photo: Partial<Omit<Photo, 'id'>>) => void
   removePhoto: (id: string) => void
@@ -48,14 +56,70 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     structuredClone(defaultEditable),
   )
   const [ready, setReady] = useState(false)
+  const [cloudStatus, setCloudStatus] = useState<CloudStatus>(() =>
+    cloudEnabled() ? 'loading' : 'off',
+  )
+  const [cloudError, setCloudError] = useState<string | null>(null)
+  const skipCloudSave = useRef(true)
+  const saveTimer = useRef<number | null>(null)
 
   useEffect(() => {
     let alive = true
-    loadContent().then((data) => {
-      if (!alive) return
-      setContent(data)
-      setReady(true)
-    })
+
+    async function boot() {
+      try {
+        if (cloudEnabled()) {
+          setCloudStatus('loading')
+          const remote = await loadCloudContent()
+          if (!alive) return
+
+          if (remote && (remote.trips.length || remote.photos.length || remote.notes.length || remote.songs.length || remote.dreams.length)) {
+            setContent(remote)
+            await saveContent(remote)
+            setCloudStatus('synced')
+            setCloudError(null)
+          } else {
+            const local = await loadContent()
+            if (!alive) return
+            setContent(local)
+            // Seed cloud with local/default if empty
+            try {
+              const prepared = await saveCloudContent(local)
+              if (!alive) return
+              setContent(prepared)
+              await saveContent(prepared)
+              setCloudStatus('synced')
+            } catch (err) {
+              setCloudStatus('error')
+              setCloudError(err instanceof Error ? err.message : 'Cloud sync failed')
+            }
+          }
+        } else {
+          const local = await loadContent()
+          if (!alive) return
+          setContent(local)
+          setCloudStatus('off')
+        }
+      } catch (err) {
+        const local = await loadContent()
+        if (!alive) return
+        setContent(local)
+        if (cloudEnabled()) {
+          setCloudStatus('error')
+          setCloudError(err instanceof Error ? err.message : 'Cloud load failed')
+        }
+      } finally {
+        if (alive) {
+          setReady(true)
+          // Allow cloud saves after initial load settles
+          window.setTimeout(() => {
+            skipCloudSave.current = false
+          }, 500)
+        }
+      }
+    }
+
+    void boot()
     return () => {
       alive = false
     }
@@ -66,10 +130,64 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     void saveContent(content)
   }, [content, ready])
 
+  useEffect(() => {
+    if (!ready || !cloudEnabled() || skipCloudSave.current) return
+
+    if (saveTimer.current) window.clearTimeout(saveTimer.current)
+    saveTimer.current = window.setTimeout(() => {
+      setCloudStatus('syncing')
+      void saveCloudContent(content)
+        .then(async (prepared) => {
+          // If images were uploaded, refresh local state with public URLs
+          const changed = JSON.stringify(prepared) !== JSON.stringify(content)
+          if (changed) {
+            skipCloudSave.current = true
+            setContent(prepared)
+            await saveContent(prepared)
+            window.setTimeout(() => {
+              skipCloudSave.current = false
+            }, 300)
+          }
+          setCloudStatus('synced')
+          setCloudError(null)
+        })
+        .catch((err) => {
+          setCloudStatus('error')
+          setCloudError(err instanceof Error ? err.message : 'Cloud save failed')
+        })
+    }, 900)
+
+    return () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current)
+    }
+  }, [content, ready])
+
+  const syncToCloud = useCallback(async () => {
+    if (!cloudEnabled()) return
+    setCloudStatus('syncing')
+    try {
+      const prepared = await saveCloudContent(content)
+      skipCloudSave.current = true
+      setContent(prepared)
+      await saveContent(prepared)
+      setCloudStatus('synced')
+      setCloudError(null)
+      window.setTimeout(() => {
+        skipCloudSave.current = false
+      }, 300)
+    } catch (err) {
+      setCloudStatus('error')
+      setCloudError(err instanceof Error ? err.message : 'Cloud sync failed')
+    }
+  }, [content])
+
   const value = useMemo<ContentContextValue>(
     () => ({
       content,
       ready,
+      cloudStatus,
+      cloudError,
+      syncToCloud,
 
       addPhoto: (photo) =>
         setContent((c) => ({ ...c, photos: [...c.photos, { ...photo, id: uid() }] })),
@@ -136,7 +254,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         setContent(structuredClone(defaultEditable))
       },
     }),
-    [content, ready],
+    [content, ready, cloudStatus, cloudError, syncToCloud],
   )
 
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>

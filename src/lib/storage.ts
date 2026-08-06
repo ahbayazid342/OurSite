@@ -1,5 +1,6 @@
 import type { EditableContent } from '../types/content'
 import { defaultEditable } from '../data/content'
+import { normalizeContent } from './normalize'
 
 const DB_NAME = 'lovebird-db'
 const DB_VERSION = 1
@@ -20,25 +21,13 @@ function openDb(): Promise<IDBDatabase> {
   })
 }
 
-function normalize(parsed: Partial<EditableContent> | null): EditableContent {
-  const base = structuredClone(defaultEditable)
-  if (!parsed) return base
-  return {
-    photos: Array.isArray(parsed.photos) ? parsed.photos : base.photos,
-    songs: Array.isArray(parsed.songs) ? parsed.songs : base.songs,
-    dreams: Array.isArray(parsed.dreams) ? parsed.dreams : base.dreams,
-    notes: Array.isArray(parsed.notes) ? parsed.notes : base.notes,
-    trips: Array.isArray(parsed.trips) ? parsed.trips : base.trips,
-  }
-}
-
 /** Migrate old localStorage payload once, then keep everything in IndexedDB */
 async function migrateFromLocalStorage(): Promise<EditableContent | null> {
   try {
     const raw = localStorage.getItem('lovebird-content-v1')
     if (!raw) return null
     const parsed = JSON.parse(raw) as Partial<EditableContent>
-    const data = normalize(parsed)
+    const data = normalizeContent(parsed)
     await saveContent(data)
     localStorage.removeItem('lovebird-content-v1')
     localStorage.removeItem('lovebird-dreams')
@@ -59,7 +48,7 @@ export async function loadContent(): Promise<EditableContent> {
     })
     db.close()
 
-    if (fromDb) return normalize(fromDb)
+    if (fromDb) return normalizeContent(fromDb)
 
     const migrated = await migrateFromLocalStorage()
     if (migrated) return migrated
@@ -113,5 +102,5 @@ export async function parseBackupFile(file: File): Promise<EditableContent> {
   if (!parsed || typeof parsed !== 'object') {
     throw new Error('Invalid backup file')
   }
-  return normalize(parsed)
+  return normalizeContent(parsed)
 }
