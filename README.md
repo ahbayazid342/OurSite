@@ -17,7 +17,21 @@ Open **http://localhost:5173/admin**
 
 - Default password: `lovebird` (change in `src/data/admin.ts`)
 - Add / edit / delete: Gallery, Songs, Dreams, Love Notes
-## Storage
+## Host / Deploy (free)
+
+### Option A — Vercel (recommended)
+1. Go to [vercel.com/new](https://vercel.com/new)
+2. Import `ahbayazid342/OurSite`
+3. Click **Deploy** (framework: Vite is auto-detected)
+
+Live URL will look like: `https://our-site.vercel.app`  
+Admin: `https://our-site.vercel.app/admin`
+
+### Option B — Netlify
+1. Go to [app.netlify.com/drop](https://app.netlify.com/drop) **or** import the GitHub repo
+2. Build command: `npm run build` · Publish folder: `dist`
+
+`vercel.json` and `netlify.toml` are already in the repo for SPA `/admin` routing.
 
 Content (trips, gallery, songs, dreams, notes) is saved in your **browser IndexedDB** — it stays after refresh.
 
