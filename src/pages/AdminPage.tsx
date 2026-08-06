@@ -139,7 +139,8 @@ function CloudStatusLine() {
   if (cloudStatus === 'off') {
     return (
       <p className="text-xs text-muted">
-        Cloud off · add Supabase keys in <code>.env</code> for multi-device sync
+        Cloud off · local: put keys in <code>.env</code> + restart dev server · live: Vercel →
+        Settings → Environment Variables + Redeploy
       </p>
     )
   }

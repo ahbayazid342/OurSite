@@ -18,6 +18,30 @@ Open **http://localhost:5173/admin**
 - Default password: `lovebird` (change in `src/data/admin.ts`)
 - Add / edit / delete: Trips, Gallery, Songs, Dreams, Love Notes
 
+## Fix: other devices ask for Vercel login
+
+Your production site must be public.
+
+1. Vercel project → **Settings → Deployment Protection**
+2. **Vercel Authentication** → turn **OFF**, or set protection to **Standard** (not “All Deployments”)
+3. Open only the production URL: `https://our-site-nu.vercel.app`  
+   (long preview URLs like `our-site-xxxxx.vercel.app` may still ask for login)
+
+## Fix: gallery images missing on other devices
+
+Images only sync if **cloud is on** on the live site.
+
+1. Vercel → **Settings → Environment Variables**
+2. Add:
+   - `VITE_SUPABASE_URL` = `https://vckuugjdkvashwtwrvlk.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY` = your **legacy anon key** (`eyJ...`) from Supabase → Settings → API Keys → Legacy
+3. **Deployments → Redeploy** (important)
+4. Open `/admin` on the live site → should say **Cloud synced**
+5. On the PC where you uploaded photos: open live `/admin` → **Sync to cloud now**  
+   (or re-upload the photos once after cloud works)
+
+Also run `supabase/setup.sql` once in Supabase SQL Editor if you haven’t.
+
 ## Cloud sync (no JSON import needed)
 
 So phone + PC share the same trips/photos/notes automatically:
