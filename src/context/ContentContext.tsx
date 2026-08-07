@@ -17,6 +17,7 @@ import type {
   LoveNote,
   Photo,
   Song,
+  ThemeFonts,
   Trip,
 } from '../types/content'
 import { uid } from '../types/content'
@@ -46,6 +47,7 @@ type ContentContextValue = {
   updateTrip: (id: string, trip: Partial<Omit<Trip, 'id'>>) => void
   removeTrip: (id: string) => void
   replaceAll: (next: EditableContent) => void
+  setTheme: (theme: Partial<ThemeFonts>) => void
   resetAll: () => void
 }
 
@@ -248,6 +250,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         setContent((c) => ({ ...c, trips: c.trips.filter((t) => t.id !== id) })),
 
       replaceAll: (next) => setContent(next),
+
+      setTheme: (theme) =>
+        setContent((c) => ({
+          ...c,
+          theme: { ...c.theme, ...theme },
+        })),
 
       resetAll: () => {
         void clearStoredContent()

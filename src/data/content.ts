@@ -1,12 +1,13 @@
+import { defaultThemeFonts } from './fonts'
 import type { EditableContent } from '../types/content'
 
 export const site = {
   brand: 'LoveBird',
   title: 'Welcome to Our Story',
-  bangla: 'প্রথম পরিচয়ের গল্প',
+  bangla: 'A quiet beginning that became forever',
   /** Anniversary month/day used for countdown (1-indexed month) */
-  anniversary: { month: 12, day: 10 },
-  marriageYear: 2022,
+  anniversary: { month: 3, day: 22 },
+  marriageYear: 2026,
 }
 
 export const timeline = [
@@ -23,8 +24,8 @@ export const timeline = [
     body: 'Coffee, nerves, and conversations that refused to end. I knew then: I wanted more evenings just like this.',
   },
   {
-    date: 'December 10, 2022',
-    iso: '2022-12-10',
+    date: 'March 22, 2026',
+    iso: '2026-03-22',
     title: 'Marriage',
     body: 'Two hearts, one promise. The day we said forever — and meant every word.',
   },
@@ -156,6 +157,7 @@ export const defaultEditable: EditableContent = {
       ],
     },
   ],
+  theme: { ...defaultThemeFonts },
 }
 
 /** Memories keyed by MM-DD for "On This Day" */
@@ -168,7 +170,7 @@ export const onThisDayMemories: Record<string, { title: string; body: string }> 
     title: 'Our first date',
     body: 'Butterflies, endless talks, and the start of everything.',
   },
-  '12-10': {
+  '03-22': {
     title: 'Our wedding day',
     body: 'The promise we made — still the best decision of my life.',
   },

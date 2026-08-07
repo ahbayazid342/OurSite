@@ -20,16 +20,16 @@ export function Hero() {
       />
 
       <div className="animate-fade-up relative z-10 max-w-3xl">
-        <p className="animate-brand-glow text-gradient mb-2 font-display text-[clamp(2.8rem,8vw,5.2rem)] font-bold leading-none tracking-[0.08em]">
+        <p className="animate-brand-glow text-gradient mb-2 font-display text-[clamp(2.8rem,8vw,5.2rem)] font-normal leading-none tracking-[0.04em]">
           {site.brand}
         </p>
-        <h1 className="mb-3 font-display text-[clamp(1.8rem,4.5vw,3rem)] font-medium leading-tight">
+        <h1 className="mb-3 font-display text-[clamp(1.8rem,4.5vw,3rem)] font-normal leading-tight tracking-wide">
           {site.title}{' '}
           <span className="animate-heartbeat inline-block text-rose" aria-hidden>
             ♥
           </span>
         </h1>
-        <p className="mb-8 font-display text-[clamp(1.35rem,3vw,1.85rem)] italic text-muted">
+        <p className="mb-8 font-body text-[clamp(1.2rem,3vw,1.65rem)] font-medium text-muted">
           {site.bangla}
         </p>
         <div className="flex flex-wrap justify-center gap-3">

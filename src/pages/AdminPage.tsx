@@ -2,13 +2,20 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useContent } from '../context/ContentContext'
 import { ADMIN_PASSWORD } from '../data/admin'
+import {
+  bodyFonts,
+  displayFonts,
+  getBodyFont,
+  getDisplayFont,
+} from '../data/fonts'
 import { downloadBackup, parseBackupFile } from '../lib/storage'
 import type { LoveNote, Photo, Song, Trip } from '../types/content'
 
 const AUTH_KEY = 'lovebird-admin-auth'
-type Tab = 'trips' | 'gallery' | 'songs' | 'dreams' | 'notes'
+type Tab = 'style' | 'trips' | 'gallery' | 'songs' | 'dreams' | 'notes'
 
 const tabs: { id: Tab; label: string }[] = [
+  { id: 'style', label: 'Style' },
   { id: 'trips', label: 'Trips' },
   { id: 'gallery', label: 'Gallery' },
   { id: 'songs', label: 'Songs' },
@@ -31,7 +38,7 @@ export function AdminPage() {
   )
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<Tab>('trips')
+  const [tab, setTab] = useState<Tab>('style')
 
   const login = (e: FormEvent) => {
     e.preventDefault()
@@ -121,6 +128,7 @@ export function AdminPage() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-6">
+        {tab === 'style' && <StyleAdmin />}
         {tab === 'trips' && <TripsAdmin />}
         {tab === 'gallery' && <GalleryAdmin />}
         {tab === 'songs' && <SongsAdmin />}
@@ -130,6 +138,87 @@ export function AdminPage() {
         <ResetSection />
       </main>
     </div>
+  )
+}
+
+function StyleAdmin() {
+  const { content, setTheme } = useContent()
+  const displayId = content.theme?.displayFont ?? 'unifraktur'
+  const bodyId = content.theme?.bodyFont ?? 'outfit'
+
+  return (
+    <section className="grid gap-8">
+      <div>
+        <h2 className="mb-1 font-display text-2xl font-semibold">Font style</h2>
+        <p className="mb-5 text-sm text-muted">
+          Choose heading + body fonts. Changes save to cloud and show on the live site.
+        </p>
+
+        <p className="mb-2 text-xs tracking-wide text-muted uppercase">Heading / brand font</p>
+        <div className="mb-6 grid gap-3 sm:grid-cols-2">
+          {displayFonts.map((font) => {
+            const active = displayId === font.id
+            return (
+              <button
+                key={font.id}
+                type="button"
+                onClick={() => setTheme({ displayFont: font.id })}
+                className={`rounded-2xl border p-4 text-left transition-colors ${
+                  active
+                    ? 'border-rose bg-paper-soft ring-2 ring-rose/30'
+                    : 'border-line bg-white hover:border-rose/40'
+                }`}
+              >
+                <p className="mb-2 text-xs text-muted">{font.label}</p>
+                <p style={{ fontFamily: font.family }} className="text-2xl leading-tight">
+                  {font.preview}
+                </p>
+              </button>
+            )
+          })}
+        </div>
+
+        <p className="mb-2 text-xs tracking-wide text-muted uppercase">Body font</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {bodyFonts.map((font) => {
+            const active = bodyId === font.id
+            return (
+              <button
+                key={font.id}
+                type="button"
+                onClick={() => setTheme({ bodyFont: font.id })}
+                className={`rounded-2xl border p-4 text-left transition-colors ${
+                  active
+                    ? 'border-rose bg-paper-soft ring-2 ring-rose/30'
+                    : 'border-line bg-white hover:border-rose/40'
+                }`}
+              >
+                <p className="mb-2 text-xs text-muted">{font.label}</p>
+                <p style={{ fontFamily: font.family }} className="text-base">
+                  {font.preview}
+                </p>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-line bg-white p-5">
+        <p className="mb-2 text-xs tracking-wide text-muted uppercase">Live preview</p>
+        <p
+          style={{ fontFamily: getDisplayFont(displayId).family }}
+          className="mb-2 text-3xl leading-tight"
+        >
+          Welcome to Our Story
+        </p>
+        <p style={{ fontFamily: getBodyFont(bodyId).family }} className="text-muted">
+          প্রথম পরিচয়ের গল্প — a short line of body text with your chosen font.
+        </p>
+        <Link to="/" className="mt-4 inline-block text-sm text-rose hover:underline">
+          Open site to see full effect →
+        </Link>
+      </div>
+    </section>
   )
 }
 

@@ -33,12 +33,18 @@ export type Trip = {
   images: string[]
 }
 
+export type ThemeFonts = {
+  displayFont: string
+  bodyFont: string
+}
+
 export type EditableContent = {
   photos: Photo[]
   songs: Song[]
   dreams: Dream[]
   notes: LoveNote[]
   trips: Trip[]
+  theme: ThemeFonts
 }
 
 export function uid() {

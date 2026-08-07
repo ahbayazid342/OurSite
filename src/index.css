@@ -3,8 +3,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-display: "Cormorant Garamond", Georgia, serif;
-  --font-body: "Outfit", system-ui, sans-serif;
+  /* Gothic fraktur display (like 𝕿𝖞𝖕𝖊 𝖘𝖔𝖒𝖊𝖙𝖍𝖎𝖓𝖌) */
+  --font-display: "UnifrakturMaguntia", "Noto Serif Bengali", Georgia, serif;
+  --font-body: "Outfit", "Noto Serif Bengali", system-ui, sans-serif;
 
   --color-rose: #b84a62;
   --color-rose-deep: #7a2438;

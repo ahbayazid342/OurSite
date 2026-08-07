@@ -1,3 +1,4 @@
+import { defaultThemeFonts } from '../data/fonts'
 import type { EditableContent } from '../types/content'
 import { defaultEditable } from '../data/content'
 
@@ -12,5 +13,9 @@ export function normalizeContent(
     dreams: Array.isArray(parsed.dreams) ? parsed.dreams : base.dreams,
     notes: Array.isArray(parsed.notes) ? parsed.notes : base.notes,
     trips: Array.isArray(parsed.trips) ? parsed.trips : base.trips,
+    theme: {
+      displayFont: parsed.theme?.displayFont || defaultThemeFonts.displayFont,
+      bodyFont: parsed.theme?.bodyFont || defaultThemeFonts.bodyFont,
+    },
   }
 }
